@@ -90,29 +90,29 @@ def train(opt):
 
     # Evaluate final model on the test dataset
     coco_eval = evaluate(model, val_loader)
-    # let's add hyperparameters and COCO metric
-    writer.add_hparams(
-        # passing hyperparameters dictionary
-        {
-            "best_loss": best_loss,
-            "total_epochs": epochs
-        },
-        # passing COCO metrics
-        {
-            "AP/IoU/0.50-0.95/all/2000": coco_eval.stats[0],
-            "AP/IoU/0.50/all/2000": coco_eval.stats[1],
-            "AP/IoU/0.75/all/2000": coco_eval.stats[2],
-            "AP/IoU/0.50-0.95/small/2000": coco_eval.stats[3],
-            "AP/IoU/0.50-0.95/medium/2000": coco_eval.stats[4],
-            "AP/IoU/0.50-0.95/large/2000": coco_eval.stats[5],
-            "AR/IoU/0.50-0.95/all/100": coco_eval.stats[6],
-            "AR/IoU/0.50-0.95/all/500": coco_eval.stats[7],
-            "AR/IoU/0.50-0.95/all/2000": coco_eval.stats[8],
-            "AR/IoU/0.50-0.95/small/2000": coco_eval.stats[9],
-            "AR/IoU/0.50-0.95/medium/2000": coco_eval.stats[10],
-            "AR/IoU/0.50-0.95/large/2000": coco_eval.stats[11],
-        }
-    )
+    # # let's add hyperparameters and COCO metric
+    # writer.add_hparams(
+    #     # passing hyperparameters dictionary
+    #     {
+    #         "best_loss": best_loss,
+    #         "total_epochs": epochs
+    #     },
+    #     # passing COCO metrics
+    #     {
+    #         "AP/IoU/0.50-0.95/all/2000": coco_eval.stats[0],
+    #         "AP/IoU/0.50/all/2000": coco_eval.stats[1],
+    #         "AP/IoU/0.75/all/2000": coco_eval.stats[2],
+    #         "AP/IoU/0.50-0.95/small/2000": coco_eval.stats[3],
+    #         "AP/IoU/0.50-0.95/medium/2000": coco_eval.stats[4],
+    #         "AP/IoU/0.50-0.95/large/2000": coco_eval.stats[5],
+    #         "AR/IoU/0.50-0.95/all/100": coco_eval.stats[6],
+    #         "AR/IoU/0.50-0.95/all/500": coco_eval.stats[7],
+    #         "AR/IoU/0.50-0.95/all/2000": coco_eval.stats[8],
+    #         "AR/IoU/0.50-0.95/small/2000": coco_eval.stats[9],
+    #         "AR/IoU/0.50-0.95/medium/2000": coco_eval.stats[10],
+    #         "AR/IoU/0.50-0.95/large/2000": coco_eval.stats[11],
+    #     }
+    # )
 
 
 def parse_opt():

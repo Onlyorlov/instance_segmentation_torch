@@ -5,8 +5,8 @@ import torch
 import torchvision
 from tqdm import tqdm
 
-from src.utils import AvgMeter, TQDM_BAR_FORMAT
 from src.coco_eval import CocoEvaluator
+from src.utils import AvgMeter, TQDM_BAR_FORMAT
 from src.coco_utils import get_coco_api_from_dataset
 
 
@@ -64,7 +64,6 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, epochs, writer
     return meter_loss_dict
 
 def validate_one_epoch(model, data_loader, device, epoch, writer):
-    
     pbar = enumerate(data_loader)
     loss_names = ['loss_total', 'loss_classifier', 'loss_box_reg', 'loss_mask', 'loss_objectness', 'loss_rpn_box_reg']
     print(('%11s' + '%18s' * 6) % ('Validation:', *loss_names))

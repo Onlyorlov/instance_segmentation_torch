@@ -8,3 +8,4 @@ PyYAML==6.0
 torch==1.13.0.dev20220625
 torchvision==0.14.0.dev20220625
 tqdm==4.64.1
+opencv-python

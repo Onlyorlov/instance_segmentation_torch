@@ -4,5 +4,7 @@ services:
   backend:
     # container_name: Back
     image: image-segmentation
+    environment:
+      - PORT = 80
     ports:
       - '8080:80'

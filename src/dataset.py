@@ -53,7 +53,7 @@ class myCOCODataset(Dataset):
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # Labels (In my case, I only one class: target class or background)
         labels = torch.ones((num_objs,), dtype=torch.int64)
-        # Adding segmentation masks. Why all to one????
+        # Adding segmentation masks.
         masks = []
         for i in range(num_objs):
             masks.append(coco.annToMask(coco_annotation[i]))
@@ -79,13 +79,12 @@ class myCOCODataset(Dataset):
 
         if self.transforms is not None:
             img, my_annotation = self.transforms(img, my_annotation)
-
         return img, my_annotation
 
     def __len__(self):
         return len(self.ids)
     
-    def visualize(self, index, return_mask=False):
+    def visualize(self, index:int, return_mask:bool=False):
         # https://stackoverflow.com/questions/50805634/how-to-create-mask-images-from-coco-dataset
         # Own coco file
         coco = self.coco
@@ -122,7 +121,14 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 
-def get_data_loaders(path_to_dataset_imgs:str, path_to_train_json:str, path_to_val_json:str, num_workers:int = 0, batch_size:int =1):
+def get_data_loaders(
+    path_to_dataset_imgs:str,
+    path_to_train_json:str,
+    path_to_val_json:str,
+    num_workers:int = 0,
+    batch_size:int =1,
+    train_augs:bool=False
+    ):
     '''
     Args:
         path_to_dataset_imgs (str): Path to dir with images
@@ -130,12 +136,12 @@ def get_data_loaders(path_to_dataset_imgs:str, path_to_train_json:str, path_to_v
         path_to_val_json (str): Path to json with val annotations
         num_workers (int): number of workers for dataloaders (check available CPU cores)
         batch_size (int): batch size
-        # image_size (list): desired size of samples (z,x,y)
+        train_augs (bool): Use augmentations when training
     '''
     dataset_train = myCOCODataset(
         root=path_to_dataset_imgs,
         annotation=path_to_train_json,
-        transforms=get_transform(train=True)
+        transforms=get_transform(train=train_augs)
         )
     dataset_valid = myCOCODataset(
         root=path_to_dataset_imgs,
@@ -150,15 +156,14 @@ def get_data_loaders(path_to_dataset_imgs:str, path_to_train_json:str, path_to_v
         drop_last=True,
         num_workers=num_workers,
         collate_fn=collate_fn
-    )
+        )
     loader_valid = DataLoader(
         dataset_valid,
         batch_size=batch_size,
         drop_last=False,
         num_workers=num_workers,
         collate_fn=collate_fn
-    )
-
+        )
     return loader_train, loader_valid
 
 def get_data_loader(path_to_dataset_imgs:str, path_to_json:str, num_workers:int = 0, batch_size:int =1):
@@ -180,7 +185,7 @@ def get_data_loader(path_to_dataset_imgs:str, path_to_json:str, num_workers:int 
         drop_last=False,
         num_workers=num_workers,
         collate_fn=collate_fn
-    )
+        )
     return loader
 
 
@@ -233,13 +238,12 @@ class ToTensor:
     def __call__(self, image, target):
         image = torchvision.transforms.functional.to_tensor(image)
         return image, target
-    
 
 def get_transform(train=False):
     transforms = [ToTensor()]
     
-    # # Data augmentation for train
-    # if train: 
-    #     transforms.append(HorizontalFlip(0.5))
-    #     transforms.append(VerticalFlip(0.5))
+    # Data augmentation for train
+    if train: 
+        transforms.append(HorizontalFlip(0.5))
+        transforms.append(VerticalFlip(0.5))
     return Compose(transforms)

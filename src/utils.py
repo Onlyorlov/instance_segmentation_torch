@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 from PIL import Image
+from pathlib import Path
 
 TQDM_BAR_FORMAT = '{l_bar}{bar:10}| {n_fmt}/{total_fmt} {elapsed}'  # tqdm bar format
 

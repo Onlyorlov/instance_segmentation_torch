@@ -31,6 +31,6 @@ def home():
 def predict(file: UploadFile):
     # save to images tmp
     image_bytes = file.file.read()
-    image_bytes = model.get_predict(image_bytes, 'bboxes')
+    image_bytes = model.get_predict(image_bytes, 'contour') #mask, contour, bboxes
     return Response(content=image_bytes, media_type="image/png")
 
