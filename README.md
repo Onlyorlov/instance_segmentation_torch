@@ -62,3 +62,5 @@ tensorboard --logdir=output
 ```
 
 ### Basic EDA in EDA.ipynb
+
+### You can check out baseline model [here](https://instance-segmentation.herokuapp.com/docs)
