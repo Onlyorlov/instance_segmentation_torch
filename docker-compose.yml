@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  backend:
+    # container_name: Back
+    image: image-segmentation
+    ports:
+      - '8080:80'
