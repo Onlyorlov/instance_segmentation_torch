@@ -43,15 +43,27 @@ docker-compose up
 <!-- ROADMAP -->
 ## Roadmap
 
-* [ ] Fix COCO metric logging!
+* [x] Fix COCO metric logging!
+
+* [ ] COCO metric add thrs and nms
 
 * [ ] Fix model weights location in app
 
+* [ ] Add visualization choice to an app
+
+* [ ] Onnx deploy
+
 * [ ] Model's params to train, test and app config!
+
+* [ ] Epochs -> iterations
 
 * [ ] Add config copy to exp folder
 
+* [ ] Add colors to predict visualization
+
 * [ ] Update README
+
+* [ ] New dataset split
 
 ## Additional features
 

@@ -4,3 +4,5 @@ model_pth: output/exp/weights/best.pt
 num_classes: 2
 workers: 1
 batch_size: 1
+thr: null # 0.6
+nms: null # 0.3

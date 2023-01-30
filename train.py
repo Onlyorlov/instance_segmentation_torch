@@ -88,31 +88,44 @@ def train(opt):
     writer.close()
     torch.cuda.empty_cache()
 
-    # Evaluate final model on the test dataset
-    coco_eval = evaluate(model, val_loader)
-    # # let's add hyperparameters and COCO metric
-    # writer.add_hparams(
-    #     # passing hyperparameters dictionary
-    #     {
-    #         "best_loss": best_loss,
-    #         "total_epochs": epochs
-    #     },
-    #     # passing COCO metrics
-    #     {
-    #         "AP/IoU/0.50-0.95/all/2000": coco_eval.stats[0],
-    #         "AP/IoU/0.50/all/2000": coco_eval.stats[1],
-    #         "AP/IoU/0.75/all/2000": coco_eval.stats[2],
-    #         "AP/IoU/0.50-0.95/small/2000": coco_eval.stats[3],
-    #         "AP/IoU/0.50-0.95/medium/2000": coco_eval.stats[4],
-    #         "AP/IoU/0.50-0.95/large/2000": coco_eval.stats[5],
-    #         "AR/IoU/0.50-0.95/all/100": coco_eval.stats[6],
-    #         "AR/IoU/0.50-0.95/all/500": coco_eval.stats[7],
-    #         "AR/IoU/0.50-0.95/all/2000": coco_eval.stats[8],
-    #         "AR/IoU/0.50-0.95/small/2000": coco_eval.stats[9],
-    #         "AR/IoU/0.50-0.95/medium/2000": coco_eval.stats[10],
-    #         "AR/IoU/0.50-0.95/large/2000": coco_eval.stats[11],
-    #     }
-    # )
+    # Evaluate final model on the val dataset
+    coco_eval_res = evaluate(model, val_loader)
+    # let's add hyperparameters and COCO metric
+    writer.add_hparams(
+        # passing hyperparameters dictionary
+        {
+            "best_loss": best_loss,
+            "total_epochs": epochs
+        },
+        # passing COCO metrics
+        {
+            "bbox_AP/IoU/0.50-0.95/all/2000": coco_eval_res['bbox'][0],
+            "bbox_AP/IoU/0.50/all/2000": coco_eval_res['bbox'][1],
+            "bbox_AP/IoU/0.75/all/2000": coco_eval_res['bbox'][2],
+            "bbox_AP/IoU/0.50-0.95/small/2000": coco_eval_res['bbox'][3],
+            "bbox_AP/IoU/0.50-0.95/medium/2000": coco_eval_res['bbox'][4],
+            "bbox_AP/IoU/0.50-0.95/large/2000": coco_eval_res['bbox'][5],
+            "bbox_AR/IoU/0.50-0.95/all/100": coco_eval_res['bbox'][6],
+            "bbox_AR/IoU/0.50-0.95/all/500": coco_eval_res['bbox'][7],
+            "bbox_AR/IoU/0.50-0.95/all/2000": coco_eval_res['bbox'][8],
+            "bbox_AR/IoU/0.50-0.95/small/2000": coco_eval_res['bbox'][9],
+            "bbox_AR/IoU/0.50-0.95/medium/2000": coco_eval_res['bbox'][10],
+            "bbox_AR/IoU/0.50-0.95/large/2000": coco_eval_res['bbox'][11],
+
+            "segm_AP/IoU/0.50-0.95/all/2000": coco_eval_res['segm'][0],
+            "segm_AP/IoU/0.50/all/2000": coco_eval_res['segm'][1],
+            "segm_AP/IoU/0.75/all/2000": coco_eval_res['segm'][2],
+            "segm_AP/IoU/0.50-0.95/small/2000": coco_eval_res['segm'][3],
+            "segm_AP/IoU/0.50-0.95/medium/2000": coco_eval_res['segm'][4],
+            "segm_AP/IoU/0.50-0.95/large/2000": coco_eval_res['segm'][5],
+            "segm_AR/IoU/0.50-0.95/all/100": coco_eval_res['segm'][6],
+            "segm_AR/IoU/0.50-0.95/all/500": coco_eval_res['segm'][7],
+            "segm_AR/IoU/0.50-0.95/all/2000": coco_eval_res['segm'][8],
+            "segm_AR/IoU/0.50-0.95/small/2000": coco_eval_res['segm'][9],
+            "segm_AR/IoU/0.50-0.95/medium/2000": coco_eval_res['segm'][10],
+            "segm_AR/IoU/0.50-0.95/large/2000": coco_eval_res['segm'][11],
+        }
+    )
 
 
 def parse_opt():

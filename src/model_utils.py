@@ -8,6 +8,7 @@ from tqdm import tqdm
 from src.coco_eval import CocoEvaluator
 from src.utils import AvgMeter, TQDM_BAR_FORMAT
 from src.coco_utils import get_coco_api_from_dataset
+from src.model import apply_nms
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, epochs, writer):
@@ -108,7 +109,7 @@ def _get_iou_types(model):
 
 
 @torch.inference_mode()
-def evaluate(model, data_loader): # add thrs? nms?
+def evaluate(model, data_loader, thr=None, nms=None):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
@@ -132,12 +133,25 @@ def evaluate(model, data_loader): # add thrs? nms?
             torch.cuda.synchronize()
         model_time = time.time()
         with torch.no_grad():
-            outputs = model(images)
+            predict = model(images)
 
-        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+        predict = [{k: v.to(cpu_device) for k, v in t.items()} for t in predict]
+        if thr:
+            raise NotImplementedError
+            # fix for batch preds
+            for pred in predict:
+                pred_t = (pred['scores']>thr).nonzero()
+                pred['masks'] = pred['masks'][pred_t].squeeze()
+                pred['boxes'] = pred['boxes'][pred_t].squeeze()
+                pred['scores'] = pred['scores'][pred_t].squeeze()
+                pred['labels'] = pred['labels'][pred_t].squeeze()
+        if nms:
+            raise NotImplementedError
+            # fix for batch preds
+            predict = apply_nms(predict, iou_thresh=nms)
         predict_time.update(time.time() - model_time)
 
-        res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
+        res = {target["image_id"].item(): output for target, output in zip(targets, predict)}
         evaluator_time = time.time()
         coco_evaluator.update(res)
         eval_time.update(time.time() - evaluator_time)
@@ -151,6 +165,6 @@ def evaluate(model, data_loader): # add thrs? nms?
 
     # accumulate predictions from all images
     coco_evaluator.accumulate()
-    coco_evaluator.summarize()
+    results = coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
-    return coco_evaluator
+    return results

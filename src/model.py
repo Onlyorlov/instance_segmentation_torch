@@ -94,28 +94,25 @@ class Predictor():
         self.nms = nms
 
     def get_predict(self, image_bytes:bytes, vis_type:str):
-        if vis_type not in ("bboxes", "mask", "contour"): # mask
+        if vis_type not in ("bboxes", "mask", "contour"):
             raise NotImplementedError(
                 "Visualization does not support %s" % vis_type
             )
 
-        # image = Image.open(io.BytesIO(image_bytes))
         image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), -1)
         transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
         img = transform(image)
         with torch.no_grad():
             predict = self.model([img])[0]
-        if self.nms: # add nms?<--TEST!
+
+        pred_t = (predict['scores']>self.thr).nonzero()
+        predict['masks'] = predict['masks'][pred_t].squeeze()
+        predict['boxes'] = predict['boxes'][pred_t].squeeze()
+        predict['scores'] = predict['scores'][pred_t].squeeze()
+        predict['labels'] = predict['labels'][pred_t].squeeze()
+
+        if self.nms:
             predict = apply_nms(predict, iou_thresh=self.nms)
-        # thrs filtering?
-        pred_t = predict['scores'].detach().numpy()>self.thr
-        masks, boxes = [], []
-        for t, mask, box in zip(pred_t, predict['masks'], predict['boxes']):
-            if t:
-                masks.append(mask)
-                boxes.append(box)
-        predict['masks'] = masks
-        predict['boxes'] = boxes
         
         if vis_type=="bboxes":
             img = self.add_bboxes(image, predict)
@@ -146,7 +143,7 @@ class Predictor():
             img (): img
             prediction (dict): model predictions
         '''
-        masks = np.zeros(img.shape)
+        masks = np.zeros(img.shape[:2]) # fix model inputs and throw exception!
         for mask in (prediction['masks']):
             masks+=mask.numpy().squeeze()
         # axes.imshow(masks.transpose((1, 2, 0)), aspect='auto') # [W, H, C]
