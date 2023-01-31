@@ -2,7 +2,6 @@ version: '3'
 
 services:
   backend:
-    # container_name: Back
     image: image-segmentation
     environment:
       - PORT = 80

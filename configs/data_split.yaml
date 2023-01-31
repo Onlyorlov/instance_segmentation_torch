@@ -1,0 +1,7 @@
+old_paths:
+  val: data/livecell_coco_val.json
+  train: data/livecell_coco_train.json
+new_paths:
+  val: data/my_livecell_coco_val.json
+  train: data/my_livecell_coco_train.json
+seed: 420

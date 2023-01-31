@@ -100,8 +100,10 @@ class Predictor():
             )
 
         image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), -1)
+        # print(image.shape)
         transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
         img = transform(image)
+        # print(img.shape)
         with torch.no_grad():
             predict = self.model([img])[0]
 

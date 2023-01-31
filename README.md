@@ -49,9 +49,9 @@ docker-compose up
 
 * [ ] Fix model weights location in app
 
-* [ ] Add visualization choice to an app
+* [x] Add visualization choice to an app
 
-* [ ] Onnx deploy
+* [ ] Onnx deploy?
 
 * [ ] Model's params to train, test and app config!
 
@@ -75,4 +75,4 @@ tensorboard --logdir=output
 
 ### Basic EDA in EDA.ipynb
 
-### You can check out baseline model [here](https://instance-segmentation.herokuapp.com/docs)
+### You can check out baseline model [here](https://bba2fr9fv1d6in16jt7b.containers.yandexcloud.net/docs)

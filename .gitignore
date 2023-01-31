@@ -5,3 +5,4 @@ data/*
 *.zip
 *.png
 .DS_Store
+_Split_df.ipynb
