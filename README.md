@@ -1,9 +1,15 @@
-# Cell instance segmentation with DL, FastAPI, Docker and Heroku
+# Cell instance segmentation with DL, FastAPI, Docker and Yandex cloud
 
 ## 1. Load data
 
 ```bash
 python get_data.py --config configs/data_urls.yaml
+```
+
+### 1a. Create train/validation split without leakage
+
+```bash
+python new_data_split.py --config configs/data_split.yaml 
 ```
 
 ## 2. Train model
@@ -18,26 +24,12 @@ python train.py --config configs/train_config.yaml
 python evaluate.py --config configs/test_config.yaml
 ```
 
-## 4. Set model weights in `app/config.yaml`, put backbone weights to `/data/resnet50-0676ba61.pth`
+## 4. Deploy
 
-## 5. Create Docker container
-
-### For mac
-
-```bash
-docker build --platform=linux/arm64 -t image-segmentation .
-```
-
-### For deployment
+### Set model weights in `app/config.yaml` and `Dockerfile`, put backbone weights to `/data/resnet50-0676ba61.pth`. Create Docker container:
 
 ```bash
 docker build --platform=linux/amd64 -t image-segmentation .
-```
-
-## 6. Run docker-compose
-
-```bash
-docker-compose up
 ```
 
 <!-- ROADMAP -->
@@ -51,7 +43,9 @@ docker-compose up
 
 * [x] Add visualization choice to an app
 
-* [ ] Onnx deploy?
+* [x] Add colors to visualization code
+
+* [ ] Onnx deploy? --
 
 * [ ] Model's params to train, test and app config!
 
@@ -59,11 +53,9 @@ docker-compose up
 
 * [ ] Add config copy to exp folder
 
-* [ ] Add colors to predict visualization
+* [x] Update README
 
-* [ ] Update README
-
-* [ ] New dataset split
+* [x] New dataset split
 
 ## Additional features
 
