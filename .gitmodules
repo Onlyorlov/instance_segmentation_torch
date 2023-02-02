@@ -1,0 +1,4 @@
+[submodule "yolov5"]
+	path = yolov5
+	url = https://github.com/Onlyorlov/yolov5.git
+	branch = my-instance-segmentation-branch

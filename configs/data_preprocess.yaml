@@ -1,0 +1,21 @@
+images: http://livecell-dataset.s3.eu-central-1.amazonaws.com/LIVECell_dataset_2021/images.zip
+annotations:
+- http://livecell-dataset.s3.eu-central-1.amazonaws.com/LIVECell_dataset_2021/annotations/LIVECell/livecell_coco_train.json
+- http://livecell-dataset.s3.eu-central-1.amazonaws.com/LIVECell_dataset_2021/annotations/LIVECell/livecell_coco_val.json
+- http://livecell-dataset.s3.eu-central-1.amazonaws.com/LIVECell_dataset_2021/annotations/LIVECell/livecell_coco_test.json
+
+old_paths:
+  val: data/livecell_coco_val.json
+  train: data/livecell_coco_train.json
+new_paths:
+  val: data/my_livecell_coco_val.json
+  train: data/my_livecell_coco_train.json
+seed: 420
+
+train_val_img: data/images/livecell_train_val_images
+test_img: data/images/livecell_test_images
+test_json: data/livecell_coco_train.json
+
+output_train: data/my_train
+output_val: data/my_val
+output_test: data/my_test

@@ -1,8 +1,0 @@
-path_to_dataset: data/images/livecell_test_images
-coco_json: data/livecell_coco_test.json
-model_pth: output/exp/weights/best.pt
-num_classes: 2
-workers: 1
-batch_size: 1
-thr: null # 0.6
-nms: null # 0.3
