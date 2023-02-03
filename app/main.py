@@ -21,7 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = Predictor(settings.path_to_model, conf_thres=settings.conf_thres, iou_thres=settings.conf_thres)
+model = Predictor(
+    settings.path_to_model, conf_thres=settings.conf_thres,
+    iou_thres=settings.conf_thres, limit=settings.vis_limit)
 
 @app.get("/")
 def home():

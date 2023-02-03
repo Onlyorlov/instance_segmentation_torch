@@ -78,16 +78,32 @@ class Annotator:
         masks = masks[..., np.newaxis]  # shape(n,h,w,1)
         masks_color = masks * (colors * alpha)  # shape(n,h,w,3)
 
-        inv_alph_masks = (1 - masks * alpha).cumprod(0)  # shape(n,h,w,1)
-        mcs = (masks_color * inv_alph_masks).sum(0) * 2  # mask color summand shape(n,h,w,3)
+        # inv_alph_masks = (1 - masks * alpha).cumprod(0)  # shape(n,h,w,1)
+        # mcs = (masks_color * inv_alph_masks).sum(0) * 2  # mask color summand shape(n,h,w,3)
+        # im_gpu = im_gpu.transpose(1, 2, 0)  # shape(h,w,3)
+        # im_gpu = im_gpu * inv_alph_masks[-1] + mcs
 
-        im_gpu = im_gpu.transpose(1, 2, 0)  # shape(h,w,3)
-        im_gpu = im_gpu * inv_alph_masks[-1] + mcs
+        #fast and ugly
+        mcs = masks_color.sum(0)
+        im_gpu = im_gpu.transpose(1, 2, 0) + mcs
+
         self.im = scale_image(im_gpu.shape, im_gpu, self.im.shape)
 
     def result(self):
         # Return annotated image as array
         return np.asarray(self.im)
+    
+    def add_label(self, label, color=(0, 0, 0)):
+        tf = max(self.lw, 1)  # font thickness
+        w, h = cv2.getTextSize(label, 0, fontScale=self.lw / 3, thickness=tf)[0]  # text width, height
+        cv2.rectangle(self.im, (0,0), (20+w, h+10), (128,128,128), -1, cv2.LINE_AA)  # filled
+        cv2.putText(self.im,
+                    label, (10, h + 2),
+                    0,
+                    self.lw / 3,
+                    color,
+                    thickness=tf,
+                    lineType=cv2.LINE_AA)
 
 def scale_image(im1_shape, image, im0_shape, ratio_pad=None):
     """
@@ -204,7 +220,7 @@ def xywh2xyxy(x):
     y[..., 3] = x[..., 1] + x[..., 3] / 2  # bottom right y
     return y
 
-def nms(dets, thresh):
+def nms(dets, thresh, limit=2000):
     x1 = dets[:, 0]
     y1 = dets[:, 1]
     x2 = dets[:, 2]
@@ -215,7 +231,8 @@ def nms(dets, thresh):
     order = scores.argsort()[::-1]
 
     keep = []
-    while order.size > 0:
+    c = 0
+    while order.size > 0 and c < limit:
         i = order[0]
         keep.append(i)
         xx1 = np.maximum(x1[i], x1[order[1:]])
@@ -230,8 +247,9 @@ def nms(dets, thresh):
 
         inds = np.where(ovr <= thresh)[0]
         order = order[inds + 1]
+        c+=1
 
-    return keep
+    return keep, c==limit
 
 def bts_to_img(bts):
     '''
