@@ -1,9 +1,9 @@
-# Cell instance segmentation with DL, FastAPI, Docker and Yandex cloud
+# Cell instance segmentation with Yolov5, FastAPI, Docker and Yandex cloud
 
 ## 1. Load data, Create train/validation split without leakage & Transform to Yolo format
 
 ```bash
-./preprocess_sript.sh --config=configs/data_preprocess.yaml
+./prepare_data.sh configs/data_process.yaml
 ```
 
 ## 2. Train model
@@ -20,8 +20,9 @@ python yolov5/segment/train.py  --batch 4
 
 ```bash
 python yolov5/segment/val.py    --data configs/yolo_data_config.yaml
-                                --weights runs/best_copy.pt
-                                --task test                        
+                                --weights yolov5/runs/train-seg/custom-dataset/weights/best_copy.pt
+                                --task test    
+                                --max_det=2000                    
 ```
 
 ## 4. Deploy
@@ -29,7 +30,7 @@ python yolov5/segment/val.py    --data configs/yolo_data_config.yaml
 ### Transform Model weights to onnx
 
 ```bash
-python yolov5/export.py --weights /content/yolov5/runs/train-seg/custom-dataset/weights/best.pt
+python yolov5/export.py --weights yolov5/runs/train-seg/custom-dataset/weights/best.pt
                         --include onnx
 ```
 
@@ -59,7 +60,7 @@ docker build --platform=linux/amd64 -t image-segmentation .
 ### Watch train/test losses
 
 ```bash
-tensorboard --logdir=runs
+tensorboard --logdir=yolov5/runs
 ```
 
 ### Basic EDA in EDA.ipynb

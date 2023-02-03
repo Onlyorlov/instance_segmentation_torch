@@ -7,7 +7,8 @@ import pandas as pd
 from pathlib import Path
 
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # projects root directory
+ROOT = FILE.parents[1]  # projects root directory
+
 
 def make_new_split(old_paths:dict, new_paths:dict, seed:int):
     '''

@@ -10,7 +10,8 @@ from attrdict import AttrDict
 from pathlib import Path
 
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # projects root directory? check!
+ROOT = FILE.parents[1]  # projects root directory
+from utils import TQDM_BAR_FORMAT
 
 
 def make_folders(path):
@@ -28,19 +29,19 @@ def convert_coco_json_to_yolo_txt(output_path, images_dir, json_file, use_segmen
     df_img_height = []
     with open(json_file) as f:
         json_data = json.load(f)
-    print('ekstraksi dari json :',json_file)
+    print('Extraction data from:',json_file)
+    pbar = enumerate(json_data["images"])
+    print(('\n' + '%40s %10s') % ('Image name', 'Objects'))
+    pbar = tqdm(pbar, total=len(json_data["images"]), bar_format=TQDM_BAR_FORMAT)
 
     # write _darknet.labels, which holds names of all classes (one class per line)
     label_file = os.path.join(output_path, "_darknet.labels.txt")
     with open(label_file, "w") as f:
-        for image in tqdm(json_data["images"], desc="Annotation txt for each iamge"):
+        for _, image in pbar:
             img_id = image["id"]
-            #img_name = image["file_name"]
             img_name = os.path.basename(image["file_name"])
-            print("checking :", img_name,"and copying images to output path")
             json_images = os.path.join(images_dir,image["file_name"])
             
-            # os.system(f"cp -R {json_images} {output_path}")
             shutil.copy(json_images, output_path)
             img_width = image["width"]
             img_height = image["height"]
@@ -51,7 +52,6 @@ def convert_coco_json_to_yolo_txt(output_path, images_dir, json_file, use_segmen
         
             anno_in_image = [anno for anno in json_data["annotations"] if anno["image_id"] == img_id]
             anno_txt = os.path.join(output_path, img_name.split(".")[0] + ".txt")
-            # anno_txt = os.path.join(output_path, img_name.replace(".jpg",".txt"))
 
             h, w, f = image['height'], image['width'], image['file_name']
             bboxes = []
@@ -90,20 +90,17 @@ def convert_coco_json_to_yolo_txt(output_path, images_dir, json_file, use_segmen
                     last_iter=len(bboxes)-1
                     line = *(segments[last_iter] if use_segments else bboxes[last_iter]),  # cls, box or segments
                     f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                print("that images contains class:",len(bboxes),"objects")
-
-    #print("Converting COCO Json to YOLO txt finished!")
-    #json_images = os.path.dirname(json_file)+"/*.jpg"
+                pbar.set_description(('%40s %10s') % (img_name, len(bboxes)))
     
-    #print("Copying images to output path")
-    #!cp -R {json_images} {output_path}
-    
-    print("creating category_id and category name in darknet.labels")
+    print("Creating category_id and category name in darknet.labels")
     with open(label_file, "w") as f:
-        for category in tqdm(json_data["categories"], desc="Categories"):
+        pbar = enumerate(json_data["categories"])
+        print(('%20s') % ('Category'))
+        pbar = tqdm(pbar, total=len(json_data["categories"]), bar_format=TQDM_BAR_FORMAT)
+        for _, category in pbar:
             category_name = category["name"]
-            print(category_name)
             f.write(f"{category_name}\n")
+            pbar.set_description(('%20s') % (category_name))
 
     print("Finish")
 
@@ -171,7 +168,7 @@ def merge_multi_segment(segments):
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=ROOT / 'data_preprocess.yaml', help='path to config file')
+    parser.add_argument('--config', type=str, default=ROOT / 'configs/data_preprocess.yaml', help='path to config file')
 
     return parser.parse_args()
 

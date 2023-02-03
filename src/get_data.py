@@ -6,7 +6,8 @@ from pathlib import Path
 from attrdict import AttrDict
 
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # projects root directory
+ROOT = FILE.parents[1]  # projects root directory
+
 
 def create_dataset(path_to_dataset:str, config_pth:str):
     '''

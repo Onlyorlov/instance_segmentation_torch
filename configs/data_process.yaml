@@ -14,7 +14,7 @@ seed: 420
 
 train_val_img: data/images/livecell_train_val_images
 test_img: data/images/livecell_test_images
-test_json: data/livecell_coco_train.json
+test_json: data/livecell_coco_test.json
 
 output_train: data/my_train
 output_val: data/my_val
