@@ -2,8 +2,8 @@
 
 import yaml
 from attrdict import AttrDict
-from fastapi import FastAPI, UploadFile, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, UploadFile, Response, Query
 
 from src.onnx_model import Predictor
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = Predictor(settings.path_to_model, thr=0.6, nms=0.3, device ='cpu')
+model = Predictor(settings.path_to_model, conf_thres=settings.conf_thres, iou_thres=settings.conf_thres)
 
 @app.get("/")
 def home():
@@ -29,9 +29,8 @@ def home():
 
 @app.post("/predict")
 def predict(file: UploadFile,
-            vis_type: str = Query("mask", enum=["mask", "bboxes", "contour"])):
+            vis_type: str = Query("bboxes", enum=["bboxes", "mask", "mask_bboxes"])):
     # save to images tmp
     image_bytes = file.file.read()
     image_bytes = model.get_predict(image_bytes, vis_type) # mask, contour, bboxes
     return Response(content=image_bytes, media_type="image/png")
-

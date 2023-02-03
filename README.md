@@ -13,16 +13,16 @@ python yolov5/segment/train.py  --batch 4
                                 --epochs 10
                                 --data configs/yolo_data_config.yaml
                                 --weights yolov5m-seg.pt
-                                --name custom-dataset
+                                --max_det=2000
 ```
 
 ## 3. Evaluate trained models on test set
 
 ```bash
 python yolov5/segment/val.py    --data configs/yolo_data_config.yaml
-                                --weights yolov5/runs/train-seg/custom-dataset/weights/best_copy.pt
-                                --task test    
-                                --max_det=2000                    
+                                --weights yolov5/runs/train-seg/exp/weights/best.pt
+                                --task test
+                                --max_det=2000
 ```
 
 ## 4. Deploy
@@ -30,7 +30,7 @@ python yolov5/segment/val.py    --data configs/yolo_data_config.yaml
 ### Transform Model weights to onnx
 
 ```bash
-python yolov5/export.py --weights yolov5/runs/train-seg/custom-dataset/weights/best.pt
+python yolov5/export.py --weights yolov5/runs/train-seg/exp/weights/best.pt
                         --include onnx
 ```
 
@@ -43,17 +43,17 @@ docker build --platform=linux/amd64 -t image-segmentation .
 <!-- ROADMAP -->
 ## Roadmap
 
-* [ ] COCO metric add thrs and nms
-
 * [x] Fix model weights location in app -- copy to fix location (inside app folder)
 
 * [x] Onnx preprocess -- letterbox
 
-* [ ] Onnx output -- thrs, nms?
+* [x] Onnx output -- thrs, nms?
 
 * [ ] Onnx postprocess --pred visualization
 
-* [ ] Update configs
+* [ ] Fix masks! <- unoptimal, crashes when deployed
+
+* [x] Update configs
 
 ## Additional features
 
@@ -65,4 +65,4 @@ tensorboard --logdir=yolov5/runs
 
 ### Basic EDA in EDA.ipynb
 
-<!-- ### You can check out baseline model [here](https://bba2fr9fv1d6in16jt7b.containers.yandexcloud.net/docs) -->
+### You can check out baseline model [here](https://bba2fr9fv1d6in16jt7b.containers.yandexcloud.net/docs)

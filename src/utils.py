@@ -1,69 +1,8 @@
-import os
 import cv2
 import numpy as np
-from PIL import Image
-from pathlib import Path
 
 TQDM_BAR_FORMAT = '{l_bar}{bar:10}| {n_fmt}/{total_fmt} {elapsed}'  # tqdm bar format
 
-
-class AvgMeter(object):
-    """
-    Acc meter class, use the update to add the current acc 
-    and self.avg to get the avg acc 
-    """
-    def __init__(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-def increment_path(path, exist_ok=False, sep='', mkdir=False):
-    # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
-    path = Path(path)  # os-agnostic
-    if path.exists() and not exist_ok:
-        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
-
-        # Method 1
-        for n in range(2, 9999):
-            p = f'{path}{sep}{n}{suffix}'  # increment path
-            if not os.path.exists(p):  #
-                break
-        path = Path(p)
-
-    if mkdir:
-        path.mkdir(parents=True, exist_ok=True)  # make directory
-
-    return path
-
-def fig2img(fig):
-    """Converts Matplotlib figure to PIL Image"""
-    import io
-    buf = io.BytesIO()
-    fig.savefig(buf)
-    buf.seek(0)
-    img = Image.open(buf)
-    return img
-
-def fig2buf(fig):
-    """Converts Matplotlib figure to bytes"""
-    import io
-    buf = io.BytesIO()
-    fig.savefig(buf)
-    buf.seek(0)
-    return buf.getvalue()
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
     # Resize and pad image while meeting stride-multiple constraints
@@ -96,6 +35,174 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleF
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
     return im, ratio, (dw, dh)
+
+
+class Annotator:
+    # YOLOv5 Annotator for train/val mosaics and jpgs and detect/hub inference annotations
+    def __init__(self, im, line_width=None, pil=False):
+        assert im.data.contiguous, 'Image not contiguous. Apply np.ascontiguousarray(im) to Annotator() input images.'
+        self.pil = pil
+        self.im = im
+        self.lw = line_width or max(round(sum(im.shape) / 2 * 0.003), 2)  # line width
+
+    def box_label(self, box, label='', color=(128, 128, 128), txt_color=(255, 255, 255)):
+        # Add one xyxy box to image with label
+        p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
+        cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
+        if label:
+            tf = max(self.lw - 1, 1)  # font thickness
+            w, h = cv2.getTextSize(label, 0, fontScale=self.lw / 3, thickness=tf)[0]  # text width, height
+            outside = p1[1] - h >= 3
+            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+            cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
+            cv2.putText(self.im,
+                        label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                        0,
+                        self.lw / 3,
+                        txt_color,
+                        thickness=tf,
+                        lineType=cv2.LINE_AA)
+
+    def masks(self, masks, colors, im_gpu, alpha=0.5):
+        """Plot masks at once.
+        Args:
+            masks (tensor): predicted masks on cuda, shape: [n, h, w]
+            colors (List[List[Int]]): colors for predicted masks, [[r, g, b] * n]
+            im_gpu (tensor): img is in cuda, shape: [3, h, w], range: [0, 1]
+            alpha (float): mask transparency: 0.0 fully transparent, 1.0 opaque
+        """
+        if len(masks) == 0:
+            self.im = im_gpu.transpose(1, 2, 0)
+        colors = np.array(colors, dtype=np.float32) / 255.0
+        colors = colors[:, None, None]  # shape(n,1,1,3)
+        masks = masks[..., np.newaxis]  # shape(n,h,w,1)
+        masks_color = masks * (colors * alpha)  # shape(n,h,w,3)
+
+        inv_alph_masks = (1 - masks * alpha).cumprod(0)  # shape(n,h,w,1)
+        mcs = (masks_color * inv_alph_masks).sum(0) * 2  # mask color summand shape(n,h,w,3)
+
+        im_gpu = im_gpu.transpose(1, 2, 0)  # shape(h,w,3)
+        im_gpu = im_gpu * inv_alph_masks[-1] + mcs
+        self.im = scale_image(im_gpu.shape, im_gpu, self.im.shape)
+
+    def result(self):
+        # Return annotated image as array
+        return np.asarray(self.im)
+
+def scale_image(im1_shape, image, im0_shape, ratio_pad=None):
+    """
+    img1_shape: model input shape, [h, w]
+    img0_shape: origin pic shape, [h, w, 3]
+    image: [h, w, 3]
+    """
+    # Rescale coordinates (xyxy) from im1_shape to im0_shape
+    if ratio_pad is None:  # calculate from im0_shape
+        gain = min(im1_shape[0] / im0_shape[0], im1_shape[1] / im0_shape[1])  # gain  = old / new
+        pad = (im1_shape[1] - im0_shape[1] * gain) / 2, (im1_shape[0] - im0_shape[0] * gain) / 2  # wh padding
+    else:
+        pad = ratio_pad[1]
+    top, left = int(pad[1]), int(pad[0])  # y, x
+    bottom, right = int(im1_shape[0] - pad[1]), int(im1_shape[1] - pad[0])
+
+    if len(image.shape) < 2:
+        raise ValueError(f'"len of masks shape" should be 2 or 3, but got {len(image.shape)}')
+    image = image[top:bottom, left:right]
+    image = cv2.resize(image, (im0_shape[1], im0_shape[0]))
+    return image
+
+def process_mask(protos, masks_in, bboxes, shape, upsample=False):
+    """
+    Crop before upsample.
+    proto_out: [mask_dim, mask_h, mask_w]
+    out_masks: [n, mask_dim], n is number of masks after nms
+    bboxes: [n, 4], n is number of masks after nms
+    shape:input_image_size, (h, w)
+    return: h, w, n
+    """
+
+    c, mh, mw = protos.shape  # CHW
+    ih, iw = shape
+    masks = np.reshape(((masks_in @ np.reshape(protos.astype(np.float32), (c, -1))) > 0.5), (-1, mh, mw))  # CHW
+
+    downsampled_bboxes = bboxes.copy()
+    downsampled_bboxes[:, 0] *= mw / iw
+    downsampled_bboxes[:, 2] *= mw / iw
+    downsampled_bboxes[:, 3] *= mh / ih
+    downsampled_bboxes[:, 1] *= mh / ih
+    masks = crop_mask(masks, downsampled_bboxes)  # CHW
+
+
+    if upsample:
+        upsampled_masks = np.empty((masks.shape[0], *shape))
+        for k, mask in enumerate(masks):
+            upsampled_masks[k] = cv2.resize(mask.astype(np.uint8), shape, interpolation=cv2.INTER_LINEAR) # HWC
+        masks = upsampled_masks
+    return (masks>0).astype(bool)
+
+def crop_mask(masks, boxes):
+    """
+    "Crop" predicted masks by zeroing out everything not in the predicted bbox.
+    Vectorized by Chong (thanks Chong).
+    Args:
+        - masks should be a size [h, w, n] tensor of masks
+        - boxes should be a size [n, 4] tensor of bbox coords in relative point form
+    """
+
+    n, h, w = masks.shape
+    x1, y1, x2, y2 = np.split(boxes[:, :, None], 4, 1)  # x1 shape(1,1,n)
+    r = np.arange(w, dtype=x1.dtype)[None, None, :]  # rows shape(1,w,1)
+    c = np.arange(h, dtype=x1.dtype)[None, :, None]  # cols shape(h,1,1)
+
+    return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
+
+def scale_boxes(img1_shape, boxes, img0_shape, ratio_pad=None):
+    # Rescale boxes (xyxy) from img1_shape to img0_shape
+    if ratio_pad is None:  # calculate from img0_shape
+        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
+    else:
+        gain = ratio_pad[0][0]
+        pad = ratio_pad[1]
+
+    boxes[..., [0, 2]] -= pad[0]  # x padding
+    boxes[..., [1, 3]] -= pad[1]  # y padding
+    boxes[..., :4] /= gain
+    clip_boxes(boxes, img0_shape)
+    return boxes
+
+def clip_boxes(boxes, shape):
+    # Clip boxes (xyxy) to image shape (height, width)
+    boxes[..., [0, 2]] = boxes[..., [0, 2]].clip(0, shape[1])  # x1, x2
+    boxes[..., [1, 3]] = boxes[..., [1, 3]].clip(0, shape[0])  # y1, y2
+
+
+class Colors:
+    # Ultralytics color palette https://ultralytics.com/
+    def __init__(self):
+        # hex = matplotlib.colors.TABLEAU_COLORS.values()
+        hexs = ('FF3838', 'FF9D97', 'FF701F', 'FFB21D', 'CFD231', '48F90A', '92CC17', '3DDB86', '1A9334', '00D4BB',
+                '2C99A8', '00C2FF', '344593', '6473FF', '0018EC', '8438FF', '520085', 'CB38FF', 'FF95C8', 'FF37C7')
+        self.palette = [self.hex2rgb(f'#{c}') for c in hexs]
+        self.n = len(self.palette)
+
+    def __call__(self, i, bgr=False):
+        c = self.palette[int(i) % self.n]
+        return (c[2], c[1], c[0]) if bgr else c
+
+    @staticmethod
+    def hex2rgb(h):  # rgb order (PIL)
+        return tuple(int(h[1 + i:1 + i + 2], 16) for i in (0, 2, 4))
+
+colors = Colors()  # create instance for 'from utils.plots import colors'
+
+def xywh2xyxy(x):
+    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
+    y = np.copy(x)
+    y[..., 0] = x[..., 0] - x[..., 2] / 2  # top left x
+    y[..., 1] = x[..., 1] - x[..., 3] / 2  # top left y
+    y[..., 2] = x[..., 0] + x[..., 2] / 2  # bottom right x
+    y[..., 3] = x[..., 1] + x[..., 3] / 2  # bottom right y
+    return y
 
 def nms(dets, thresh):
     x1 = dets[:, 0]
@@ -139,8 +246,8 @@ def image_to_bts(frame):
     '''
     :param frame: WxHx3 ndarray
     '''
-    _, bts = cv2.imencode('.webp', frame)
-    bts = bts.tostring()
+    _, bts = cv2.imencode('.jpg', frame)
+    bts = bts.tobytes()
     return bts
 
 def delete_dsstore(path='../datasets'):
