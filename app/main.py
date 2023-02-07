@@ -6,7 +6,6 @@ from fastapi import FastAPI, UploadFile, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.model import Predictor
-# from src.onnx_model import Predictor
 
 
 with open('app/config.yaml') as f:

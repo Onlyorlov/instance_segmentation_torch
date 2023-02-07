@@ -243,7 +243,8 @@ def get_transform(train=False):
     transforms = [ToTensor()]
     
     # Data augmentation for train
-    if train: 
+    if train:
+        raise NotImplementedError # add masks augmentations!
         transforms.append(HorizontalFlip(0.5))
         transforms.append(VerticalFlip(0.5))
     return Compose(transforms)

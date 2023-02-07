@@ -2,6 +2,7 @@
 **/__pycache__/
 output/*
 data/*
+*.ipynb
 *.zip
 *.png
 .DS_Store

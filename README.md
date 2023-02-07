@@ -45,7 +45,7 @@ docker build --platform=linux/amd64 -t image-segmentation .
 
 * [x] Add colors to visualization code
 
-* [ ] Onnx deploy? --
+* [ ] Onnx deploy? -- problems with torchvision
 
 * [ ] Model's params to train, test and app config!
 
@@ -65,6 +65,6 @@ docker build --platform=linux/amd64 -t image-segmentation .
 tensorboard --logdir=output
 ```
 
-### Basic EDA in EDA.ipynb
+### Basic EDA in [EDA.ipynb](https://drive.google.com/file/d/1qZeqaf9AuR43M-k9YN8iT6JD6jkR00Tu/view?usp=sharing)
 
 ### You can check out baseline model [here](https://bba2fr9fv1d6in16jt7b.containers.yandexcloud.net/docs)
