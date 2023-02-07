@@ -55,6 +55,8 @@ docker build --platform=linux/amd64 -t image-segmentation .
 
 * [x] Update configs
 
+* [x] Cleanup
+
 ## Additional features
 
 ### Watch train/test losses
@@ -63,6 +65,6 @@ docker build --platform=linux/amd64 -t image-segmentation .
 tensorboard --logdir=yolov5/runs
 ```
 
-### Basic EDA in EDA.ipynb
+### Basic EDA in [EDA.ipynb](https://drive.google.com/file/d/1qZeqaf9AuR43M-k9YN8iT6JD6jkR00Tu/view?usp=sharing)
 
 ### You can check out model [here](https://bba2fr9fv1d6in16jt7b.containers.yandexcloud.net/docs)

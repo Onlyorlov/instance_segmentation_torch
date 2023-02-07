@@ -7,5 +7,4 @@ runs/*
 *.onnx
 *.png
 .DS_Store
-_Split_df.ipynb
-_Predictor_test.ipynb
+*.ipynb
